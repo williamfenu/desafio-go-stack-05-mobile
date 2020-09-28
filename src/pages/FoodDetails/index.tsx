@@ -73,38 +73,63 @@ const FoodDetails: React.FC = () => {
 
   useEffect(() => {
     async function loadFood(): Promise<void> {
-      // Load a specific food with extras based on routeParams id
+      api.get<Food>(`foods/${routeParams.id}`).then(response => {
+        setFood(response.data);
+        const extrasWithQuantity = response.data.extras.map(extra => ({
+          ...extra,
+          quantity: 0,
+        }));
+        setExtras(extrasWithQuantity);
+      });
     }
 
     loadFood();
   }, [routeParams]);
 
   function handleIncrementExtra(id: number): void {
-    // Increment extra quantity
+    const newExtrasValues = [...extras];
+    const extraIndex = extras.findIndex(extra => extra.id === id);
+    newExtrasValues[extraIndex].quantity += 1;
+    setExtras(newExtrasValues);
   }
 
   function handleDecrementExtra(id: number): void {
-    // Decrement extra quantity
+    const newExtrasValues = [...extras];
+    const extraIndex = extras.findIndex(extra => extra.id === id);
+    if (newExtrasValues[extraIndex].quantity > 0) {
+      newExtrasValues[extraIndex].quantity -= 1;
+      setExtras(newExtrasValues);
+    }
   }
 
   function handleIncrementFood(): void {
-    // Increment food quantity
+    setFoodQuantity(oldValue => oldValue + 1);
   }
 
   function handleDecrementFood(): void {
-    // Decrement food quantity
+    if (foodQuantity > 1) {
+      setFoodQuantity(oldValue => oldValue - 1);
+    }
   }
 
   const toggleFavorite = useCallback(() => {
-    // Toggle if food is favorite or not
+    if (food) {
+      setIsFavorite(!isFavorite);
+    }
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
-    // Calculate cartTotal
+    const extratotal = extras.reduce((extraTotal, extra) => {
+      let total = extraTotal;
+      total += extra.value * extra.quantity;
+      return total;
+    }, 0);
+
+    return formatValue(extratotal + food.price * foodQuantity);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
-    // Finish the order and save on the API
+    navigation.navigate('Orders');
   }
 
   // Calculate the correct icon name
